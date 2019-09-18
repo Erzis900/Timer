@@ -1,0 +1,245 @@
+{% if show == True %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>TIMER</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flipclock.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mute.css') }}">
+
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/flipclock.js') }}"></script>
+
+    <script type="text/javascript" charset="utf-8">
+
+    var creativeminds = new Audio('../static/music/creativeminds.mp3');
+    var slowmotion = new Audio('../static/music/slowmotion.mp3');
+    var clearday = new Audio('../static/music/clearday.mp3');
+    var alarm = new Audio('../static/music/alarm.mp3');
+
+    var started = false;
+
+    $(document).ready(function() {
+    	var clock = $('.clock').FlipClock(0, {
+            clockFace: 'MinuteCounter',
+            countdown: true,
+            autoStart: false,
+            callbacks: {
+            	start: function() {
+                    alarm.pause();
+            		alarm.currentTime = 0;
+            	},
+                stop: function() {
+    				creativeminds.pause();
+    				creativeminds.currentTime = 0;
+    				slowmotion.pause();
+    				slowmotion.currentTime = 0;
+    				clearday.pause();
+    				clearday.currentTime = 0;
+    				alarm.play();
+    				alarm.currentTime = 0;
+
+                    if(clock.getTime().time == 0) {
+                        started = false;
+                    }
+                }
+            }
+        });
+
+        $('.start').click(function(e) {
+            var min = parseInt(document.getElementsByName("min")[0].value);
+            var sec = parseInt(document.getElementsByName("sec")[0].value);
+
+            if(!started) {
+                if(min + sec > 0) {
+                    clock.setTime(min * 60 + sec);
+                    clock.start();
+                    started = true;
+                    socket.emit('start', { minutes: min, seconds: sec });
+                }
+            }
+            else {
+                clock.start();
+                console.log(clock.getTime().time);
+                min = parseInt((clock.getTime().time / 60), 10);
+                sec = clock.getTime().time % 60 + 2;
+                socket.emit('start', { minutes: min, seconds: sec });
+            }
+        });
+
+        $('.stop').click(function(e) {
+            clock.stop();
+    		alarm.pause();
+    		alarm.currentTime = 0;
+        });
+
+        $('.reset').click(function(e) {
+            clock.setTime(0);
+    		alarm.pause();
+    		alarm.currentTime = 0;
+    		document.getElementsByName("min")[0].value = "0";
+    		document.getElementsByName("sec")[0].value = "0";
+        });
+
+    	$('.css-checkbox').change(function(e) {
+    		var sound = document.getElementById('checkboxG2');
+            if (!sound.checked) {
+                creativeminds.pause();
+    			slowmotion.pause();
+    			clearday.pause();
+    			alarm.pause();
+            }
+    		else {
+    			if(songs.selectedIndex == 0) {
+    				creativeminds.play();
+    			}
+    			else if(songs.selectedIndex == 1) {
+    				slowmotion.play();
+    			}
+    			else if(songs.selectedIndex == 2) {
+    				clearday.play();
+    			}
+    		}
+        });
+
+        var socket = io.connect('http://127.0.0.1:5000/');
+        socket.on('connect', function() {
+            socket.send('Admin connected');
+        });
+
+        $('.stop').on('click', function() {
+            socket.emit('stop', 'data');
+        });
+
+        $('.resume').on('click', function() {
+            socket.emit('resume', 'data');
+        });
+
+        $('.reset').on('click', function() {
+            socket.emit('reset', 'data');
+        });
+
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            var input = $('input.msg').val();
+            socket.emit( 'msg', {
+              message : input
+            })
+        });
+
+        $('.cm').click(function(e) {
+            creativeminds.play();
+        });
+
+        $('.cm_pause').click(function(e) {
+            creativeminds.pause();
+        });
+
+        $('.sm').click(function(e) {
+            slowmotion.play();
+        });
+
+        $('.sm_pause').click(function(e) {
+            slowmotion.pause();
+        });
+
+        $('.cd').click(function(e) {
+            clearday.play();
+        });
+
+        $('.cd_pause').click(function(e) {
+            clearday.pause();
+        });
+    });
+    </script>
+</head>
+
+<body>
+    <header>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    Narzędziownik
+                </div>
+                <div class="col-sm">
+                    <img src="static/img/logo.png">
+                </div>
+                <div class="col-sm">
+                    <img src="static/img/menu.png">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row c">
+            <div class="col text-center">
+                <div class="clock"  style="display: inline-block;width: initial"></div>
+
+                <br>
+
+                <input type="text" name="min" size="3" value="0">
+                <input type="text" name="sec" size="3" value="0">
+
+                <br>
+
+                <div class="reset">Restart</div>
+                <div class="stop"><img src="static/img/pause.png"></div>
+                <div class="start"><img src="static/img/start.png"></div>
+
+                <br>
+            </div>
+            <div class="col">
+                <b>Skupienie:</b>
+                <hr>
+                1. Creative minds
+                <div class="cm_pause"><img src="static/img/pause.png"></div>
+                <div class="cm"><img src="static/img/start.png"></div><br>
+                2. Slow motion
+                <div class="sm_pause"><img src="static/img/pause.png"></div>
+                <div class="sm"><img src="static/img/start.png"></div><br>
+                3. Clear day
+                <div class="cd_pause"><img src="static/img/pause.png"></div>
+                <div class="cd"><img src="static/img/start.png"></div><br>
+
+                <br>
+                <b>Aktywacja:</b>
+                <hr>
+                1. Creative minds
+                <div class="cm_pause"><img src="static/img/pause.png"></div>
+                <div class="cm"><img src="static/img/start.png"></div><br>
+                2. Slow motion
+                <div class="sm_pause"><img src="static/img/pause.png"></div>
+                <div class="sm"><img src="static/img/start.png"></div><br>
+                3. Clear day
+                <div class="cd_pause"><img src="static/img/pause.png"></div>
+                <div class="cd"><img src="static/img/start.png"></div><br>
+                <hr>
+                <form method="POST" action="">
+                    <label> Wiadomość: </label>
+                    <input class="msg"/>
+                    <input type="submit" value="Wyślij"/>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+{% else %}
+    {% if error != None %}
+        error: {{ error }}
+    {% endif %}
+
+    <form method="post">
+        <input name="token">
+        <input type="submit">
+    </form>
+{% endif %}

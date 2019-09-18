@@ -1,0 +1,48 @@
+body {
+    margin: 0px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+header {
+    background-color: #4E3DC9;
+    color: white;
+    padding: 10px;
+    font-size: 30px;
+}
+
+.col-sm {
+    text-align: center;
+}
+
+.c {
+    height: calc(100vh - 67px);
+    display: flex;
+    align-items: center;
+}
+
+.messages_box {
+    margin: 50px;
+    word-wrap: break-word;
+}
+
+.cm, .cm_pause, .sm, .sm_pause, .cd, .cd_pause {
+    display: inline-block;
+}
+
+.reset, .start, .stop {
+    display: inline-block;
+    margin: 15px;
+}
+
+.clock_wrapper {
+    /*position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);*/
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 117px);
+}

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TIMER</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flipclock.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mute.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/flipclock.js') }}"></script>
+
+    <script type="text/javascript" charset="utf-8">
+
+    $(document).ready(function() {
+    	var clock = $('.clock').FlipClock(0, {
+            clockFace: 'MinuteCounter',
+            countdown: true,
+            autoStart: false,
+            callbacks: {
+            	start: function() {
+            		console.log("START");
+            	},
+                stop: function() {
+            		console.log("STOP");
+            	}
+            }
+        });
+
+        var socket = io.connect('http://127.0.0.1:5000/');
+        socket.on('connect', function() {
+            socket.send('User connected');
+        });
+
+        socket.on('start', function(data) {
+            clock.setTime(data.minutes * 60 + data.seconds);
+            clock.start();
+        });
+
+        socket.on('stop', function() {
+            clock.stop();
+        });
+
+        socket.on('resume', function() {
+            clock.start();
+        });
+
+        socket.on('reset', function() {
+            clock.setTime(0);
+        });
+
+        socket.on('start2', function() {
+            stopwatch.start();
+        });
+
+        socket.on('msg', function(msg) {
+            $('div.messages_box').append(msg.message + '<br>' + '<hr>');
+        });
+    });
+    </script>
+</head>
+
+<body>
+    <header>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    Narzędziownik
+                </div>
+                <div class="col-sm">
+                    <img src="static/img/logo.png">
+                </div>
+                <div class="col-sm">
+                    <img src="static/img/menu.png">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="clock_wrapper">
+        <div class="clock"></div>
+    </div>
+
+    <div class="messages_box"></div>
+</body>
+</html>
